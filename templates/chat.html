@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Chat with Mistral AI</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: Arial, sans-serif; }
+
+        .chat-container {
+            width: 80%;
+            max-width: 800px;
+            margin: 20px auto;
+            background: #f8f8f8;
+            padding: 20px;
+            border-radius: 10px;
+        }
+
+        #chat-window {
+            height: 60vh;
+            overflow-y: auto;
+            padding: 10px;
+            border: 1px solid #ddd;
+            margin-bottom: 20px;
+        }
+
+        .message {
+            margin: 5px 10px;
+            max-width: 70%;
+            padding: 8px 15px;
+            border-radius: 20px;
+            position: relative;
+            text-align: left;
+            word-wrap: break-word;
+        }
+
+        .ai-message {
+            background-color: #d1e1ff;
+            float: left;
+        }
+
+        .user-message {
+            background-color: #e1ffc1;
+            float: right;
+            clear: right;
+            margin-left: 50px;
+        }
+
+        .error-message {
+            background-color: #ffdddd;
+            color: #b30000;
+            float: none;
+            margin: 10px auto;
+            padding: 12px;
+            text-align: center;
+        }
+
+        .input-container {
+            display: flex;
+            gap: 10px;
+        }
+
+        #user-input {
+            flex: 1;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 20px;
+            font-size: 14px;
+            outline: none;
+        }
+
+        #send-btn {
+            padding: 8px 20px;
+            background-color: #4CAF50;
+            border: none;
+            border-radius: 20px;
+            color: white;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        #send-btn:hover {
+            background-color: #45a049;
+        }
+
+        /* Responsive Enhancements */
+        @media (max-width: 768px) {
+            .chat-container {
+                width: 95%;
+            }
+
+            #user-input {
+                font-size: 12px;
+            }
+
+            #send-btn {
+                padding: 6px 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <div id="chat-window"></div>
+        <div class="input-container">
+            <input type="text" id="user-input" placeholder="Type your message...">
+            <button id="send-btn">Send</button>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('send-btn').addEventListener('click', async () => {
+            const userInput = document.getElementById('user-input');
+            const chatWindow = document.getElementById('chat-window');
+            
+            // Add user message
+            const userMsg = document.createElement('div');
+            userMsg.className = 'message user-message';
+            userMsg.textContent = userInput.value.trim();
+            if (userMsg.textContent === '') return;
+            chatWindow.appendChild(userMsg);
+            
+            // Scroll to bottom
+            chatWindow.scrollTop = chatWindow.scrollHeight;
+
+            // Fetch AI response
+            try {
+                const response = await fetch('/api/get_response', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: userInput.value })
+                });
+
+                const data = await response.json();
+                if (!response.ok) {
+                    throw new Error(data.error);
+                }
+
+                // Add AI response
+                const aiMsg = document.createElement('div');
+                aiMsg.className = 'message ai-message';
+                aiMsg.textContent = data.response;
+                chatWindow.appendChild(aiMsg);
+
+                // Scroll to bottom again
+                chatWindow.scrollTop = chatWindow.scrollHeight;
+                userInput.value = '';
+            } catch (error) {
+                // Add error message
+                const errorMsg = document.createElement('div');
+                errorMsg.className = 'message error-message';
+                errorMsg.textContent = error instanceof Error ? error.message : error;
+                chatWindow.appendChild(errorMsg);
+                chatWindow.scrollTop = chatWindow.scrollHeight;
+            }
+        });
+    </script>
+</body>
+</html>
